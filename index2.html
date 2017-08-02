@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<style>
+#map {
+    
+}
+
+</style>
+<script type="text/javascript">
+    function draw(flights_data){
+        "use strict";
+        /*Setting for bl.ocks.org */
+        var margin = 0,
+            width = 960 - margin,
+            height = 500 - margin;
+
+        var svg = d3.select("body")
+                    .append("svg")
+                    .attr("width", width + margin)
+                    .attr("height", height + margin)
+                    
+
+        //create base US map
+        var projection = d3.geo.albersUsa()
+                        .translate([width/2, height/2]); //set center
+        
+        var path = d3.geo.path()
+                    .projection(projection);
+
+        //add zoom in zoom out
+        var zoom = d3.behavior.zoom()
+                    .translate(projection.translate())
+                    .scale(projection.scale())
+                    .scaleExtent([height, 16 * height])
+                    .on("zoom", zoomed);
+        
+        var g = svg.append("g")
+                    .call(zoom);
+        
+        //get US GEO data and draw map
+        d3.json("us-states.json", function(json) {       
+            g.append('g')
+                .attr('class', 'map')
+                .selectAll('path')
+                .data(json.features)
+                .enter()
+                .append('path')
+                .attr('d', path)
+                .on("click", clicked)
+                .style('fill', 'lightBlue')
+                .style('stroke', 'black')
+                .style('stroke-width', 0.25);
+        });
+
+        function clicked(d) {
+            var centroid = path.centroid(d),
+                translate = projection.translate();
+
+            projection.translate([
+                translate[0] - centroid[0] + width / 2,
+                translate[1] - centroid[1] + height / 2
+            ]);
+
+            zoom.translate(projection.translate());
+
+            g.selectAll("path").transition()
+                .duration(700)
+                .attr("d", path);
+            }
+
+        function zoomed() {
+            projection.translate(d3.event.translate).scale(d3.event.scale);
+            g.selectAll("path").attr("d", path);
+        }
+
+        //create a function to load airport geo data from airports.csv
+      
+
+
+    }
+
+</script>
+
+
+</head>
+<body>
+
+
+<script>
+    /* 
+    https://bl.ocks.org/mbostock/2206340
+    Draw MAP*/
+    d3.csv('cleaned_data.csv', draw);
+</script>
+
+
+</body>

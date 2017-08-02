@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script type="text/javascript">
+    function draw(flights_data){
+        "use strict";
+        /*Setting for bl.ocks.org */
+        var margin = 0,
+            width = 960 - margin,
+            height = 500 - margin;
+
+        var svg = d3.select("body")
+                    .append("svg")
+                    .attr("width", width + margin)
+                    .attr("height", height + margin)
+                    .append('g')
+                    .attr('class', 'map');
+
+        //create base US map
+        var projection = d3.geo.albersUsa()
+                        .translate([width/2, height/2]) //set center
+                        .scale([1100]);                  //Zoom size
+        
+        var path = d3.geo.path()
+                    .projection(projection);
+        
+        //get US GEO data and draw map
+        d3.json("us-states.json", function(json) {       
+            var map = svg.selectAll('path')
+                        .data(json.features)
+                        .enter()
+                        .append('path')
+                        .attr('d', path)
+                        .style('fill', 'lightBlue')
+                        .style('stroke', 'black')
+                        .style('stroke-width', 0.5);
+        });
+    }
+
+</script>
+
+
+</head>
+<body>
+
+
+<script>
+    /* Draw MAP*/
+    d3.csv('cleaned_data.csv', draw);
+</script>
+
+
+</body>
