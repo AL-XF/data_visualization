@@ -1,4 +1,4 @@
-<<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -137,12 +137,7 @@ div.tooltip {
             .style('stroke-width', 0.25);
 
         
-        function key_delay(d) {
-            //return d.values['rate_delay'];
-            return d['key'];
-        }
-        function key_notarr(d) {
-            //return d.values['rate_notarrived'];
+        function key_func(d) {
             return d['key'];
         }
         //create a function to load airport geo data
@@ -234,7 +229,7 @@ div.tooltip {
         g.append('g')
             .attr("class", "bubble delay")
             .selectAll("circle")
-            .data(year_data)
+            .data(year_data, key_func)
             .enter()
             .append("circle")
             .attr('cx', function(d) {return projection(d.values['coords'])[0];})
@@ -260,53 +255,42 @@ div.tooltip {
 
 
         //input nested[i]
-        function update(year_data){           
+        function update(year_data){
+            
             //display year
             var year = year_data.key;
             year_label.text("Year: "+ year);
-            window.global_year = year;
+
+            d3.select(".delay").selectAll("circle").remove();
+            d3.select(".notarrived").selectAll("circle").remove();
 
             var delay_circles = g.select(".delay")
                                 .selectAll('circle')
-                                .data(year_data.values);
+                                .data(year_data.values, key_func);
 
             var notarrived_circles = g.select(".notarrived")
                                 .selectAll('circle')
-                                .data(year_data.values);
-
-            //transition to a small circle, then remove
-            delay_circles.exit()
-                        .transition()
-                        .duration(750)
-                        .attr("r", 1e-3)
-                        .remove();
-            notarrived_circles.exit()
-                        .transition()
-                        .duration(750)
-                        .attr("r", 1e-3)
-                        .remove();            
-            //debugger;
+                                .data(year_data.values, key_func);
+            
             delay_circles.enter()
                 .append("circle")
-                .attr('cx', function(d) {return projection(d.values['coords'])[0];})
-                .attr('cy', function(d) {return projection(d.values['coords'])[1];})
-                .attr("r", 0);
-            notarrived_circles.enter()
-                .append("circle")
-                .attr('cx', function(d) {return projection(d.values['coords'])[0];})
-                .attr('cy', function(d) {return projection(d.values['coords'])[1];})
-                .attr("r", 0);
-
-            //draw new circle
-            delay_circles.on("mouseover", show_tooltip)
+                .on("mouseover", show_tooltip)
                 .on("mouseout", hide_tooltip)
+                .attr('cx', function(d) {return projection(d.values['coords'])[0];})
+                .attr('cy', function(d) {return projection(d.values['coords'])[1];})
+                .attr('r', 1)
                 .transition()
                 .duration(500)
                 .attr('r', function(d) {return radius_delay(d.values['rate_delay']);});
                 
 
-            notarrived_circles.on("mouseover", show_tooltip)
+            notarrived_circles.enter()
+                .append("circle")
+                .on("mouseover", show_tooltip)
                 .on("mouseout", hide_tooltip)
+                .attr('cx', function(d) {return projection(d.values['coords'])[0];})
+                .attr('cy', function(d) {return projection(d.values['coords'])[1];})
+                .attr('r', 1)
                 .transition()
                 .duration(500)
                 .attr('r', function(d) {return radius_notarr(d.values['rate_notarrived']);});
@@ -333,25 +317,25 @@ div.tooltip {
                         .append("div")
                         .text(function(d) {return d;});
 
-                buttons.on("click", function(d) { 
+                    buttons.on("click", function(d) { 
                     d3.select(".years_buttons")
-                        .selectAll("div")
-                        .transition()
-                        .duration(500)
-                        .style("color", "black")
-                        .style("background", "rgb(251, 201, 127)");
+                      .selectAll("div")
+                      .transition()
+                      .duration(500)
+                      .style("color", "black")
+                      .style("background", "rgb(251, 201, 127)");
 
                     d3.select(this)
-                        .transition()
-                        .duration(500)
-                        .style("background", "lightBlue")
-                        .style("color", "white");
-
+                      .transition()
+                      .duration(500)
+                      .style("background", "lightBlue")
+                      .style("color", "white");
+                    window.global_year = d;
                     var idx = d - 2006;
                     update(nested[idx]);
-                });
+                    });
             }
-        },1200);
+        },1000);
 
         function clicked(d) {
             var centroid = path.centroid(d),
@@ -365,11 +349,11 @@ div.tooltip {
             zoom.translate(projection.translate());
 
             g.selectAll("path").transition()
-                .duration(500)
+                .duration(700)
                 .attr("d", path);
             g.selectAll("circle")
                 .transition()
-                .duration(500)
+                .duration(700)
                 .attr('cx', function(d) {return projection(d.values['coords'])[0];})
                 .attr('cy', function(d) {return projection(d.values['coords'])[1];});
            
@@ -412,7 +396,7 @@ div.tooltip {
             .text(function(d) {
                 return d;
             });
-           
+
     }
 
 </script>
@@ -424,15 +408,15 @@ div.tooltip {
 
 <script>
     /* 
+    https://bl.ocks.org/mbostock/2206340
     .defer(d3.csv, 'https://raw.githubusercontent.com/AL-XF/data_visualization/master/cleaned_data.csv')
     Draw MAP*/
     queue()
         .defer(d3.json, 'us-states.json')
         .defer(d3.csv, 'airports.csv')
-        .defer(d3.csv, 'https://raw.githubusercontent.com/AL-XF/data_visualization/master/cleaned_data.csv')
+        .defer(d3.csv, 'cleaned_data.csv')
         .await(draw); 
 </script>
 
 
 </body>
-</html>
